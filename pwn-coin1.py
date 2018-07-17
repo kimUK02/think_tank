@@ -1,37 +1,20 @@
 from pwn import *
- 
-p = remote("pwnable.kr",9007)
- 
-print p.recv()
-for j in range(100):
-    print p.recvuntil("N=")
-    a = int(p.recvuntil(" "))                           
-    print p.recvuntil("C=")
-    b = int(p.recvuntil("\n"))
-    print b
- 
-    low = 0
-    high = a
-    cnt = 0
-    while cnt != b :
-        cnt = cnt + 1
-        snd = ""
-        mid = (low+high)/2
-        for i in range(low,mid):
-            snd += str(i)
-            snd += " "
-        snd += str(mid)
-        print snd
-        p.sendline(snd)
-        a = int(p.recv())
-        print a
-        if a % 10 == 9 :
-            high = mid
-        else:
-            low = mid + 1
- 
-    mid = (low+high)/2
-    p.sendline(str(mid))
-    print str(mid)
-    print p.recv()
-print p.recv()
+sh = remote('pwnable.kr', 9007)
+sh.recv(10024)
+for _ in range(100):
+	tmp = sh.recv(1024).strip().split(' ')
+	n = int(tmp[0].split('=')[1])
+	c = int(tmp[1].split('=')[1])
+	s = 0
+	e = n
+	for _ in range(c):
+		sh.sendline(' '.join(str(e) for e in range(s, (e+s)/2)))
+		a = sh.recv(1024, timeout=0.2).strip()
+		i = int(a)
+		if i == ((e+s)/2-s)*10:
+        		s = (e+s)/2
+    		else:
+        		e = (e+s)/2
+	sh.sendline(str(s))
+	#print sh.recv(1024, timeout=0.2)
+print sh.recv(1024, timeout=1)
